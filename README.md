@@ -258,15 +258,15 @@ graph TD
     end
     
     subgraph "JavaScript Functions"
-        ANALYZE[analyzeTask()]
-        SHOW_FOLLOWUP[showFollowupQuestions()]
-        SUBMIT_FOLLOWUP[submitFollowup()]
-        CHECK_STATUS[checkStatus()]
+        ANALYZE[analyzeTask Function]
+        SHOW_FOLLOWUP[showFollowupQuestions Function]
+        SUBMIT_FOLLOWUP[submitFollowup Function]
+        CHECK_STATUS[checkStatus Function]
     end
     
     subgraph "API Communication"
-        FETCH_ANALYZE[fetch('/api/analyze')]
-        FETCH_HEALTH[fetch('/api/health')]
+        FETCH_ANALYZE[fetch /api/analyze]
+        FETCH_HEALTH[fetch /api/health]
     end
     
     FORM --> ANALYZE
@@ -418,9 +418,9 @@ npm start
 graph TD
     A[Choose MCP Server] --> B{Which Server?}
     
-    B -->|Google Search| C[cd MCP/google<br/>npm install<br/>node index.js]
-    B -->|SHRED Analyzer| D[cd MCP/shred-analyzer<br/>npm install<br/>node index.js]
-    B -->|SHRED Research| E[cd MCP/shred-research<br/>npm install<br/>node index.js]
+    B -->|Google Search| C[cd MCP/google npm install node index.js]
+    B -->|SHRED Analyzer| D[cd MCP/shred-analyzer npm install node index.js]
+    B -->|SHRED Research| E[cd MCP/shred-research npm install node index.js]
     
     C --> F[Google Search MCP Running]
     D --> G[SHRED Analyzer MCP Running]
