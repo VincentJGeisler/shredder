@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHRED Tax Credit Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .chat-container {
+            padding: 30px;
+            min-height: 400px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .result pre {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e1e8ed;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .error {
+            background: #fee;
+            border-left-color: #e74c3c;
+            color: #c0392b;
+        }
+
+        .success {
+            background: #efe;
+            border-left-color: #27ae60;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status.ok {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 SHRED Analyzer</h1>
+            <p>Quick analysis for Canadian SHRED tax credit eligibility</p>
+        </div>
+
+        <div class="chat-container">
+            <div id="status" class="status" style="display: none;"></div>
+
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="task">📝 Describe your daily task:</label>
+                    <textarea 
+                        id="task" 
+                        placeholder="e.g., 'Developing machine learning algorithms to optimize energy consumption in manufacturing processes'"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="company">🏢 Company context (optional):</label>
+                    <input 
+                        type="text" 
+                        id="company" 
+                        placeholder="e.g., 'Software company specializing in industrial automation'"
+                    >
+                </div>
+
+                <button id="analyzeBtn" class="analyze-btn">
+                    🚀 Analyze SHRED Eligibility
+                </button>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Researching SHRED requirements and analyzing your task...</p>
+            </div>
+
+            <div id="result" style="display: none;"></div>
+            
+            <!-- Follow-up Questions Section -->
+            <div id="followupSection" style="display: none; margin-top: 20px;">
+                <div style="background: #f0f8ff; border: 2px solid #4a90e2; border-radius: 10px; padding: 20px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">🤔 Follow-up Questions</h3>
+                    <p style="margin-bottom: 15px;">To provide a more accurate analysis, please answer these questions:</p>
+                    <div id="followupQuestions"></div>
+                    <button id="submitFollowup" class="analyze-btn" style="margin-top: 15px; background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);">
+                        🔄 Re-analyze with Additional Information
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const taskInput = document.getElementById('task');
+        const companyInput = document.getElementById('company');
+        const loadingDiv = document.getElementById('loading');
+        const resultDiv = document.getElementById('result');
+        const statusDiv = document.getElementById('status');
+        const followupSection = document.getElementById('followupSection');
+        const followupQuestions = document.getElementById('followupQuestions');
+        const submitFollowupBtn = document.getElementById('submitFollowup');
+
+        // Check server status on load
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    const googleStatus = data.google_configured ? ' (Google API configured)' : ' (Google API not configured)';
+                    const claudeStatus = data.claude_configured ? ' (Claude API configured)' : ' (Claude API not configured)';
+                    statusDiv.className = 'status ok';
+                    statusDiv.textContent = `✅ Server connected${googleStatus}${claudeStatus}`;
+                    statusDiv.style.display = 'block';
+                } else {
+                    throw new Error('Server not responding');
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Server connection failed. Please make sure the server is running.';
+                statusDiv.style.display = 'block';
+            }
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
+            const task = taskInput.value.trim();
+            const company = companyInput.value.trim();
+
+            if (!task) {
+                alert('Please enter a task description');
+                return;
+            }
+
+            // Show loading state
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '⏳ Analyzing...';
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        task_description: task,
+                        company_context: company
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.claude_analysis) {
+                        // Show Claude's analysis
+                        resultDiv.innerHTML = `
+                            <div class="result success">
+                                <h3>🎯 SHRED Eligibility Analysis</h3>
+                                <p><strong>Task:</strong> ${data.task_description}</p>
+                                ${data.company_context ? `<p><strong>Company:</strong> ${data.company_context}</p>` : ''}
+                                <h4>🤖 Claude Sonnet 4.5 Analysis:</h4>
+                                <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e8ed; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;">${data.claude_analysis}</div>
+                            </div>
+                        `;
+                        
+                        // Check if follow-up questions are needed
+                        const hasFollowupQuestions = data.claude_analysis.includes('Follow-up Questions Needed');
+                        const hasMediumConfidence = data.claude_analysis.includes('Medium') && data.claude_analysis.includes('Confidence');
+                        const hasLowConfidence = data.claude_analysis.includes('Low') && data.claude_analysis.includes('Confidence');
+                        const hasTestingKeywords = data.claude_analysis.toLowerCase().includes('testing') || 
+                                                  data.claude_analysis.toLowerCase().includes('performance') || 
+                                                  data.claude_analysis.toLowerCase().includes('throughput') ||
+                                                  data.claude_analysis.toLowerCase().includes('research') ||
+                                                  data.claude_analysis.toLowerCase().includes('investigation');
+                        
+                        // Always show follow-up questions if they exist in the analysis
+                        if (hasFollowupQuestions) {
+                            showFollowupQuestions(data.claude_analysis);
+                        } else {
+                            followupSection.style.display = 'none';
+                        }
+                    } else if (data.claude_error) {
+                        // Show error and fallback to prompt
+                        resultDiv.innerHTML = `
+                            <div class="result error">
+                                <h3>⚠️ Claude API Error</h3>
+                                <p><strong>Error:</strong> ${data.claude_error}</p>
+                                <p>Showing analysis prompt instead:</p>
+                                <h4>📋 Analysis Prompt for Claude Sonnet 4.5:</h4>
+                                <pre>${data.analysis_prompt}</pre>
+                            </div>
+                        `;
+                        followupSection.style.display = 'none';
+                    } else {
+                        // Fallback
+                        resultDiv.innerHTML = `
+                            <div class="result">
+                                <h3>🎯 Analysis Complete</h3>
+                                <p><strong>Task:</strong> ${data.task_description}</p>
+                                ${data.company_context ? `<p><strong>Company:</strong> ${data.company_context}</p>` : ''}
+                                <h4>📋 Analysis Prompt for Claude Sonnet 4.5:</h4>
+                                <pre>${data.analysis_prompt}</pre>
+                            </div>
+                        `;
+                        followupSection.style.display = 'none';
+                    }
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Analysis Failed</h3>
+                            <p>${data.error}</p>
+                            ${data.details ? `<p><strong>Details:</strong> ${data.details}</p>` : ''}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Connection Error</h3>
+                        <p>Failed to connect to the analysis server.</p>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                // Hide loading state
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🚀 Analyze SHRED Eligibility';
+            }
+        });
+
+        // Follow-up question functions
+        function showFollowupQuestions(analysis) {
+            // Extract questions from analysis - try multiple patterns
+            let questionsMatch = analysis.match(/Follow-up Questions Needed[\s\S]*?(?=###|$)/);
+            if (!questionsMatch) {
+                // Try alternative patterns
+                questionsMatch = analysis.match(/Follow-up Questions[\s\S]*?(?=###|$)/);
+            }
+            if (!questionsMatch) {
+                // Look for bullet points after any mention of questions
+                questionsMatch = analysis.match(/(?:questions|clarify|clarification)[\s\S]*?(?=###|$)/i);
+            }
+            
+            if (questionsMatch) {
+                const questionsText = questionsMatch[0];
+                const questions = questionsText.split('\n')
+                    .filter(line => {
+                        const trimmed = line.trim();
+                        return (trimmed.startsWith('-') || trimmed.startsWith('•') || trimmed.startsWith('*')) && 
+                               trimmed.length > 3;
+                    })
+                    .map(line => line.replace(/^[-•*]\s*/, '').trim())
+                    .filter(q => q.length > 0 && !q.toLowerCase().includes('list') && !q.toLowerCase().includes('focus on'));
+                
+                if (questions.length > 0) {
+                    followupQuestions.innerHTML = questions.map((question, index) => `
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">${index + 1}. ${question}</label>
+                            <textarea 
+                                id="followup_${index}" 
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; resize: vertical; min-height: 60px;"
+                                placeholder="Your answer here..."
+                            ></textarea>
+                        </div>
+                    `).join('');
+                    
+                    followupSection.style.display = 'block';
+                } else {
+                    // If no specific questions found, show generic ones
+                    followupQuestions.innerHTML = `
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">1. What specific technical uncertainty or problem are you trying to resolve?</label>
+                            <textarea 
+                                id="followup_0" 
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; resize: vertical; min-height: 60px;"
+                                placeholder="Describe the technical challenges or unknowns..."
+                            ></textarea>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">2. Is this work advancing scientific or technological knowledge beyond current state-of-the-art?</label>
+                            <textarea 
+                                id="followup_1" 
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; resize: vertical; min-height: 60px;"
+                                placeholder="Explain how this advances beyond existing knowledge or practices..."
+                            ></textarea>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">3. What systematic investigation methods are you using?</label>
+                            <textarea 
+                                id="followup_2" 
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; resize: vertical; min-height: 60px;"
+                                placeholder="Describe your research methodology or experimental approach..."
+                            ></textarea>
+                        </div>
+                    `;
+                    followupSection.style.display = 'block';
+                }
+            }
+        }
+        
+        // Handle follow-up submission
+        submitFollowupBtn.addEventListener('click', async () => {
+            const followupAnswers = [];
+            const followupElements = followupQuestions.querySelectorAll('textarea');
+            
+            followupElements.forEach((element, index) => {
+                if (element.value.trim()) {
+                    followupAnswers.push(`${index + 1}. ${element.value.trim()}`);
+                }
+            });
+            
+            if (followupAnswers.length === 0) {
+                alert('Please answer at least one follow-up question');
+                return;
+            }
+            
+            // Re-analyze with follow-up information
+            const originalTask = taskInput.value.trim();
+            const originalCompany = companyInput.value.trim();
+            const enhancedTask = `${originalTask}\n\nAdditional Information:\n${followupAnswers.join('\n')}`;
+            
+            // Show loading
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '⏳ Re-analyzing...';
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            followupSection.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        task_description: enhancedTask,
+                        company_context: originalCompany
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.claude_analysis) {
+                        resultDiv.innerHTML = `
+                            <div class="result success">
+                                <h3>🎯 Updated SHRED Eligibility Analysis</h3>
+                                <p><strong>Original Task:</strong> ${originalTask}</p>
+                                ${originalCompany ? `<p><strong>Company:</strong> ${originalCompany}</p>` : ''}
+                                <h4>🤖 Claude Sonnet 4.5 Analysis (with additional information):</h4>
+                                <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e8ed; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;">${data.claude_analysis}</div>
+                            </div>
+                        `;
+                        followupSection.style.display = 'none';
+                    } else if (data.claude_error) {
+                        resultDiv.innerHTML = `
+                            <div class="result error">
+                                <h3>⚠️ Claude API Error During Re-analysis</h3>
+                                <p><strong>Error:</strong> ${data.claude_error}</p>
+                                <p>Showing analysis prompt instead:</p>
+                                <h4>📋 Analysis Prompt for Claude Sonnet 4.5:</h4>
+                                <pre>${data.analysis_prompt}</pre>
+                            </div>
+                        `;
+                        followupSection.style.display = 'none';
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="result error">
+                                <h3>❌ Re-analysis Failed</h3>
+                                <p>No analysis received from server</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Re-analysis Failed</h3>
+                            <p>${data.error || 'Unknown error occurred'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Connection Error</h3>
+                        <p>Failed to re-analyze with follow-up information.</p>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🚀 Analyze SHRED Eligibility';
+            }
+        });
+
+        // Check status on page load
+        checkStatus();
+    </script>
+</body>
+</html>

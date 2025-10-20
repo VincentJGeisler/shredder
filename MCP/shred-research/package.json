@@ -1,0 +1,19 @@
+{
+  "name": "shred-research-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for researching and analyzing SHRED tax credit eligibility with Google search integration",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "googleapis": "^128.0.0",
+    "dotenv": "^16.3.1"
+  },
+  "keywords": ["mcp", "shred", "tax", "canada", "research", "google", "search"],
+  "author": "",
+  "license": "MIT"
+}
